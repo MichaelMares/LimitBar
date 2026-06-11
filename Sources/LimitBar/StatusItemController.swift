@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Owns the NSStatusItem, drives the ~12fps menu bar animation, and shows the SwiftUI panel
+/// Owns the NSStatusItem, drives the menu bar animation, and shows the SwiftUI panel
 /// in a transient popover on click.
 @MainActor
 final class StatusItemController: NSObject {
@@ -10,9 +10,6 @@ final class StatusItemController: NSObject {
     private let popover = NSPopover()
     private var timer: Timer?
     private var frame = 0
-
-    /// Rolling history of live throughput samples that the waterfall scrolls through.
-    private var waterfall = [Double](repeating: 0, count: 48)
 
     init(store: UsageStore) {
         self.store = store
@@ -27,13 +24,14 @@ final class StatusItemController: NSObject {
             button.toolTip = "LimitBar — AI usage"
         }
 
-        let host = NSHostingController(rootView: MenuView(store: store))
+        let host = NSHostingController(rootView: MenuView(store: store, settings: store.settings))
         host.sizingOptions = [.preferredContentSize]
         popover.behavior = .transient
         popover.animates = true
         popover.contentViewController = host
 
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 12.0, repeats: true) { [weak self] _ in
+        // ~8fps is plenty for the bolt pulse; the batteries only change on refresh.
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 8.0, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.tick() }
         }
         if let timer { RunLoop.main.add(timer, forMode: .common) }
@@ -52,13 +50,12 @@ final class StatusItemController: NSObject {
 
     private func tick() {
         frame &+= 1
-        waterfall.removeFirst()
-        waterfall.append(store.live.freshTokensPerMinute)
+        let isDark = statusItem.button?.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) != .aqua
         statusItem.button?.image = MenuBarRenderer.render(
             statuses: store.statuses,
             live: store.live,
-            waterfall: waterfall,
-            frame: frame
+            frame: frame,
+            isDark: isDark
         )
     }
 }

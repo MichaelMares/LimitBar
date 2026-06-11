@@ -20,7 +20,7 @@ if let idx = CommandLine.arguments.firstIndex(of: "--check") {
 /// Fetches real provider data and writes a high-res PNG of the menu bar artwork — lets us
 /// preview the look without the menu bar's screenshot restrictions.
 func renderBarPreview(to path: String) {
-    let providers: [any UsageProvider] = [ClaudeProvider(), CodexProvider(), OpenRouterProvider()]
+    let providers: [any UsageProvider] = ProviderRegistry.all.map { $0.make() }
     let semaphore = DispatchSemaphore(value: 0)
     Task {
         var statuses: [ProviderStatus] = []
@@ -28,10 +28,7 @@ func renderBarPreview(to path: String) {
             statuses.append(await provider.fetch())
         }
         let live = LiveTokenMonitor().sample()
-        // Synthetic waterfall so the preview shows the scrolling shape.
-        let base = max(live.freshTokensPerMinute, 1)
-        let samples = (0..<48).map { i in base * (0.35 + 0.65 * abs(sin(Double(i) * 0.4))) }
-        if let data = MenuBarRenderer.png(statuses: statuses, live: live, waterfall: samples, frame: 8) {
+        if let data = MenuBarRenderer.png(statuses: statuses, live: live, frame: 8) {
             try? data.write(to: URL(fileURLWithPath: path))
             print("Wrote preview to \(path)")
         } else {
@@ -43,7 +40,7 @@ func renderBarPreview(to path: String) {
 }
 
 func runCheck(filter: Set<String>?) {
-    let providers: [any UsageProvider] = [ClaudeProvider(), CodexProvider(), OpenRouterProvider()]
+    let providers: [any UsageProvider] = ProviderRegistry.all.map { $0.make() }
     let semaphore = DispatchSemaphore(value: 0)
 
     Task {
