@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 
 @MainActor
 final class UsageStore: ObservableObject {
@@ -8,19 +9,28 @@ final class UsageStore: ObservableObject {
     @Published var isRefreshing = false
     @Published var lastRefresh: Date?
 
-    private let providers: [any UsageProvider]
+    let settings: AppSettings
     private let liveMonitor: LiveTokenMonitor
     private var refreshTimer: Timer?
     private var liveTimer: Timer?
+    private var cancellables: Set<AnyCancellable> = []
 
     /// Limits refresh cadence (network). Live activity is sampled much more often (local files).
     private let refreshInterval: TimeInterval = 60
     private let liveInterval: TimeInterval = 3
 
-    init(providers: [any UsageProvider], liveMonitor: LiveTokenMonitor) {
-        self.providers = providers.filter { $0.isConfigured() }
+    init(settings: AppSettings, liveMonitor: LiveTokenMonitor) {
+        self.settings = settings
         self.liveMonitor = liveMonitor
         start()
+    }
+
+    /// Active = enabled by the user AND actually configured on this machine, in registry order.
+    private func activeProviders() -> [any UsageProvider] {
+        ProviderRegistry.all
+            .filter { settings.isEnabled($0.key) }
+            .map { $0.make() }
+            .filter { $0.isConfigured() }
     }
 
     func start() {
@@ -31,9 +41,14 @@ final class UsageStore: ObservableObject {
         liveTimer = Timer.scheduledTimer(withTimeInterval: liveInterval, repeats: true) { [weak self] _ in
             Task { @MainActor in await self?.sampleLive() }
         }
-        // Keep timers firing while the MenuBarExtra menu is open.
         if let t = refreshTimer { RunLoop.main.add(t, forMode: .common) }
         if let t = liveTimer { RunLoop.main.add(t, forMode: .common) }
+
+        // Re-fetch (and prune disabled providers) whenever the selection changes.
+        settings.$enabled
+            .dropFirst()
+            .sink { [weak self] _ in Task { @MainActor in await self?.refresh() } }
+            .store(in: &cancellables)
     }
 
     func refresh() async {
@@ -41,6 +56,7 @@ final class UsageStore: ObservableObject {
         isRefreshing = true
         defer { isRefreshing = false }
 
+        let providers = activeProviders()
         var results: [ProviderStatus] = []
         await withTaskGroup(of: ProviderStatus.self) { group in
             for provider in providers {
@@ -48,9 +64,9 @@ final class UsageStore: ObservableObject {
             }
             for await status in group { results.append(status) }
         }
-        // Stable order: claude first, then codex, then the rest alphabetically.
-        let order = ["claude": 0, "codex": 1, "openrouter": 2]
-        results.sort { (order[$0.key] ?? 99, $0.key) < (order[$1.key] ?? 99, $1.key) }
+        // Preserve registry order.
+        let order = Dictionary(uniqueKeysWithValues: ProviderRegistry.all.enumerated().map { ($1.key, $0) })
+        results.sort { (order[$0.key] ?? 99) < (order[$1.key] ?? 99) }
         statuses = results
         lastRefresh = Date()
     }
@@ -58,20 +74,5 @@ final class UsageStore: ObservableObject {
     func sampleLive() async {
         let monitor = liveMonitor
         live = await Task.detached(priority: .utility) { monitor.sample() }.value
-    }
-
-    /// Compact menu bar title, e.g. "CL 42% CX 17%" plus a bolt when tokens are flowing.
-    var menuBarTitle: String {
-        var parts: [String] = []
-        for status in statuses {
-            if let worst = status.worstWindow {
-                parts.append("\(status.shortCode) \(Int(worst.usedPercent.rounded()))%")
-            } else if status.error != nil {
-                parts.append("\(status.shortCode) !")
-            }
-        }
-        if parts.isEmpty { parts.append("…") }
-        if live.isActive { parts.append("⚡︎") }
-        return parts.joined(separator: "  ")
     }
 }

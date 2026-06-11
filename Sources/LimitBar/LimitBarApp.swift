@@ -11,16 +11,16 @@ struct LimitBarApp: App {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private var settings: AppSettings?
     private var store: UsageStore?
     private var controller: StatusItemController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory) // menu bar only, no Dock icon
 
-        let store = UsageStore(
-            providers: [ClaudeProvider(), CodexProvider(), OpenRouterProvider()],
-            liveMonitor: LiveTokenMonitor()
-        )
+        let settings = AppSettings()
+        let store = UsageStore(settings: settings, liveMonitor: LiveTokenMonitor())
+        self.settings = settings
         self.store = store
         controller = StatusItemController(store: store)
     }
