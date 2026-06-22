@@ -19,6 +19,13 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(allowKeychain, forKey: Self.allowKeychainKey) }
     }
 
+    /// When true, post a notification when a rate-limit window you'd heavily used rolls over.
+    /// Defaults to false (notifications require the user's permission).
+    @Published var notifyOnReset: Bool {
+        didSet { UserDefaults.standard.set(notifyOnReset, forKey: Self.notifyOnResetKey) }
+    }
+    private static let notifyOnResetKey = "notifyOnReset"
+
     init() {
         if let saved = UserDefaults.standard.array(forKey: Self.enabledKey) as? [String] {
             enabled = Set(saved)
@@ -26,6 +33,7 @@ final class AppSettings: ObservableObject {
             enabled = Set(ProviderRegistry.all.filter(\.defaultOn).map(\.key))
         }
         allowKeychain = (UserDefaults.standard.object(forKey: Self.allowKeychainKey) as? Bool) ?? true
+        notifyOnReset = (UserDefaults.standard.object(forKey: Self.notifyOnResetKey) as? Bool) ?? false
     }
 
     func isEnabled(_ key: String) -> Bool { enabled.contains(key) }

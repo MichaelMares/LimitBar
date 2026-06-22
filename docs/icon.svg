@@ -1,0 +1,41 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="512" y1="100" x2="512" y2="924" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#262B37"/>
+      <stop offset="1" stop-color="#12141A"/>
+    </linearGradient>
+    <linearGradient id="fill" x1="249" y1="512" x2="585" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E8814A"/>
+      <stop offset="0.55" stop-color="#C765B8"/>
+      <stop offset="1" stop-color="#3F84F5"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="512" y1="292" x2="512" y2="732" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFE066"/>
+      <stop offset="1" stop-color="#FFB300"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle background -->
+  <rect x="100" y="100" width="824" height="824" rx="184" fill="url(#bg)"/>
+  <rect x="100.5" y="100.5" width="823" height="823" rx="183.5" stroke="#FFFFFF" stroke-opacity="0.07" stroke-width="1"/>
+  <!-- Top sheen -->
+  <rect x="140" y="140" width="744" height="380" rx="150" fill="#FFFFFF" fill-opacity="0.03"/>
+
+  <!-- Battery -->
+  <g>
+    <!-- shell / track -->
+    <rect x="223" y="372" width="540" height="280" rx="72" fill="#2C313C"/>
+    <!-- brand fill (remaining quota) -->
+    <rect x="249" y="398" width="336" height="228" rx="48" fill="url(#fill)"/>
+    <!-- fill sheen -->
+    <rect x="249" y="398" width="336" height="96" rx="48" fill="#FFFFFF" fill-opacity="0.16"/>
+    <!-- shell outline -->
+    <rect x="223" y="372" width="540" height="280" rx="72" stroke="#D2D7E0" stroke-width="15"/>
+    <!-- terminal nub -->
+    <rect x="781" y="452" width="30" height="120" rx="15" fill="#D2D7E0"/>
+  </g>
+
+  <!-- Lightning bolt bursting out of the battery -->
+  <path d="M564.8 292 L371.2 529.6 L494.4 529.6 L441.6 732 L652.8 476.8 L520.8 476.8 Z"
+        fill="url(#bolt)" stroke="#15171C" stroke-width="14" stroke-linejoin="round"/>
+</svg>

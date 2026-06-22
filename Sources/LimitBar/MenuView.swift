@@ -18,6 +18,9 @@ struct MenuView: View {
         .padding(14)
         .frame(width: 304)
         .animation(.snappy(duration: 0.28), value: showingSettings)
+        // The pop-over is mouse-driven; suppress the keyboard focus ring that otherwise lands on
+        // the first button when the pop-over becomes the key window.
+        .focusEffectDisabled()
     }
 
     // MARK: - Header
@@ -297,6 +300,7 @@ private struct SettingsPane: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             providerSection
+            notificationsSection
             keychainSection
             HStack {
                 Text("Fill color = provider · width = remaining")
@@ -335,6 +339,24 @@ private struct SettingsPane: View {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private var notificationsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader("Notifications")
+            Card {
+                Toggle(isOn: $settings.notifyOnReset) {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Remind me when a limit refreshes").font(.subheadline)
+                        Text("Get a notification when a window you'd nearly maxed out rolls over — time to get back to vibecoding.")
+                            .font(.caption2).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .toggleStyle(.switch)
+                .controlSize(.mini)
             }
         }
     }
