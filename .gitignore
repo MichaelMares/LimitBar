@@ -5,3 +5,10 @@
 .DS_Store
 /tmp/
 *.png
+# Keep documentation images (e.g. README screenshots).
+!docs/*.png
+
+# Local agent / editor tooling — not part of the project.
+.agents/
+.claude/
+skills-lock.json
