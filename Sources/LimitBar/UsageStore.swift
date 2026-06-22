@@ -49,6 +49,12 @@ final class UsageStore: ObservableObject {
             .dropFirst()
             .sink { [weak self] _ in Task { @MainActor in await self?.refresh() } }
             .store(in: &cancellables)
+
+        // Toggling Keychain access changes what Claude can return — refresh immediately.
+        settings.$allowKeychain
+            .dropFirst()
+            .sink { [weak self] _ in Task { @MainActor in await self?.refresh() } }
+            .store(in: &cancellables)
     }
 
     func refresh() async {

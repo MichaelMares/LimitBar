@@ -21,7 +21,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>CFBundleExecutable</key>
     <string>LimitBar</string>
     <key>CFBundleIdentifier</key>
-    <string>com.michaelmares.limitbar</string>
+    <string>com.limitbar.LimitBar</string>
     <key>CFBundleName</key>
     <string>LimitBar</string>
     <key>CFBundlePackageType</key>
@@ -40,5 +40,26 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </plist>
 PLIST
 
-codesign --force --sign - "$APP" 2>/dev/null || true
+# Choose the signer: a stable self-signed identity (so the macOS Keychain "Always Allow" grant
+# for the Claude credentials item survives rebuilds — ad-hoc "-" gets a new cdhash every build
+# and re-prompts). Set LIMITBAR_ADHOC=1 to fall back to ad-hoc signing.
+if [[ "${LIMITBAR_ADHOC:-0}" == "1" ]]; then
+    SIGNER="-"
+else
+    SIGNER="$("$ROOT/scripts/signing-identity.sh")"
+fi
+
+# iCloud-synced folders keep re-adding com.apple.FinderInfo to the bundle, which makes codesign
+# refuse ("resource fork ... not allowed"). Clear xattrs and sign, retrying to beat the race.
+signed=0
+for _ in 1 2 3 4 5; do
+    xattr -cr "$APP" 2>/dev/null || true
+    if codesign --force --sign "$SIGNER" "$APP" 2>/dev/null; then signed=1; break; fi
+    sleep 1
+done
+if [[ "$signed" != "1" ]]; then
+    echo "codesign failed after retries (extended-attribute race?)." >&2
+    exit 1
+fi
+codesign --verify "$APP" 2>/dev/null && echo "Signed with: $SIGNER"
 echo "Bundled: $APP"

@@ -19,7 +19,17 @@ struct ClaudeProvider: UsageProvider {
         FileManager.default.fileExists(atPath: Util.home.appendingPathComponent(".claude.json").path)
     }
 
+    /// Mirror of `AppSettings.allowKeychain`. Read here (off the main actor) so we can bail out
+    /// before any `SecItemCopyMatching` call — turning the toggle off truly stops Keychain access.
+    static var keychainReadingAllowed: Bool {
+        UserDefaults.standard.object(forKey: AppSettings.allowKeychainKey) as? Bool ?? true
+    }
+
     func fetch() async -> ProviderStatus {
+        guard Self.keychainReadingAllowed else {
+            return status(windows: [], subtitle: nil,
+                          error: "Keychain access turned off — enable it in LimitBar settings to read Claude usage")
+        }
         guard let creds = Self.readCredentials() else {
             return status(windows: [], subtitle: nil,
                           error: "Keychain item \"\(Self.keychainService)\" missing or access denied")
