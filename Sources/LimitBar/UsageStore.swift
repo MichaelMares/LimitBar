@@ -55,6 +55,13 @@ final class UsageStore: ObservableObject {
             .dropFirst()
             .sink { [weak self] _ in Task { @MainActor in await self?.refresh() } }
             .store(in: &cancellables)
+
+        // Ask for notification permission when the user turns reset reminders on.
+        settings.$notifyOnReset
+            .dropFirst()
+            .sink { enabled in if enabled { Notifier.shared.requestAuthorization() } }
+            .store(in: &cancellables)
+        if settings.notifyOnReset { Notifier.shared.requestAuthorization() }
     }
 
     func refresh() async {
@@ -75,6 +82,7 @@ final class UsageStore: ObservableObject {
         results.sort { (order[$0.key] ?? 99) < (order[$1.key] ?? 99) }
         statuses = results
         lastRefresh = Date()
+        Notifier.shared.process(statuses: results, enabled: settings.notifyOnReset)
     }
 
     func sampleLive() async {
