@@ -5,6 +5,9 @@ horizontal "battery" gauges — plus a bolt that lights up while local sessions 
 
 ![LimitBar menu bar gauges](docs/menubar.png)
 
+![Limitbar Sreenshot 1](docs/screenshot1.png)
+![Limitbar Sreenshot 2](docs/screenshot2.png)
+
 It runs as a background agent (no Dock icon, no window): the entire UI is the status‑bar item and
 a small pop‑over.
 
