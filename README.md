@@ -5,18 +5,30 @@ horizontal "battery" gauges — plus a bolt that lights up while local sessions 
 
 ![LimitBar menu bar gauges](docs/menubar.png)
 
+I've built this small utility for myself, to get a good overview of my current limits with different providers.
+
+If you're like me, running multiple subscriptions at once, using OpenClaw and constantly worrying about a quota hits, this one is for you.
+
 It runs as a background agent (no Dock icon, no window): the entire UI is the status‑bar item and
 a small pop‑over.
+
+![Main interface](docs/screenshot-main.png)
 
 ## What it shows
 
 - **Battery gauges**, one per provider, colored by brand (Claude = orange, Codex/OpenAI = white,
-  OpenRouter = black, Gemini = blue). The fill is your *remaining* quota on the most‑constrained
+  OpenRouter = black, Gemini = blue). The fill is your _remaining_ quota on the most‑constrained
   window — full battery = lots left.
 - A **bolt** that pulses when any local session is actively processing tokens, with a live
   tokens‑per‑minute readout in the pop‑over.
 - A **pop‑over** with exact per‑window percentages, reset times, and live throughput.
 - **Provider selection** and a **Keychain privacy switch** in Settings.
+
+## Notifications
+
+This app will also display a notification when you're token quota has been refreshed. This is particularly useful as natively there is no option to see this (outside of '/usage')
+
+![Screenshot of the config](docs/screenshot-config.png)
 
 ## Requirements
 
@@ -51,12 +63,12 @@ LimitBar **reads existing credentials that the official CLIs already store** —
 writes, or refreshes tokens. So "setup" usually just means signing in with the relevant CLI once. A
 provider only appears once its credentials are detected; toggle which ones show in **Settings**.
 
-| Provider | How to authenticate | Where LimitBar reads it |
-|---|---|---|
-| **Claude** | Sign in with [Claude Code](https://claude.com/claude-code): run `claude` once | macOS Keychain item `Claude Code-credentials` |
-| **Codex** | Sign in with the Codex CLI: run `codex` once | `~/.codex/auth.json` (falls back to local session logs offline) |
-| **Gemini** | Sign in with the [Gemini CLI](https://github.com/google-gemini/gemini-cli): run `gemini` once | `~/.gemini/oauth_creds.json` |
-| **OpenRouter** | Set an API key (see below) | `OPENROUTER_KEY` env var, or `~/.zshenv` |
+| Provider       | How to authenticate                                                                           | Where LimitBar reads it                                         |
+| -------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| **Claude**     | Sign in with [Claude Code](https://claude.com/claude-code): run `claude` once                 | macOS Keychain item `Claude Code-credentials`                   |
+| **Codex**      | Sign in with the Codex CLI: run `codex` once                                                  | `~/.codex/auth.json` (falls back to local session logs offline) |
+| **Gemini**     | Sign in with the [Gemini CLI](https://github.com/google-gemini/gemini-cli): run `gemini` once | `~/.gemini/oauth_creds.json`                                    |
+| **OpenRouter** | Set an API key (see below)                                                                    | `OPENROUTER_KEY` env var, or `~/.zshenv`                        |
 
 ### OpenRouter API key
 
@@ -76,7 +88,7 @@ design it won't refresh the token for you (that would invalidate the CLI's own s
 
 ## Privacy & security
 
-- **Read‑only.** LimitBar only *reads* credentials the CLIs already created; it never writes,
+- **Read‑only.** LimitBar only _reads_ credentials the CLIs already created; it never writes,
   rotates, or stores them.
 - **No third parties.** Tokens are sent only to each provider's own endpoint to fetch usage —
   `api.anthropic.com`, `chatgpt.com`, `cloudcode-pa.googleapis.com`, `openrouter.ai`. There is no
