@@ -111,6 +111,10 @@ swift build                                                   # debug build
 
 Architecture notes and the steps to add a new provider live in [CLAUDE.md](CLAUDE.md).
 
+
+## Contributions
+
+If you have any cool ideas on what more this could do, please feel free to open a PR.
 ## License
 
 [MIT](LICENSE) © Michael Mares
