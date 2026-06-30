@@ -37,9 +37,8 @@ open /Applications/LimitBar.app
 ```
 
 `bundle.sh` signs the app with a **stable, self‑signed certificate** it creates once in your login
-Keychain (named `LimitBar Self-Signed`). This matters: a stable code identity lets macOS remember
-your "Always Allow" Keychain decision across rebuilds, instead of re‑prompting every time. To skip
-this and use throwaway ad‑hoc signing instead, run `LIMITBAR_ADHOC=1 ./scripts/bundle.sh`.
+Keychain (named `LimitBar Self-Signed`), giving the app a consistent code identity across rebuilds.
+To skip this and use throwaway ad‑hoc signing instead, run `LIMITBAR_ADHOC=1 ./scripts/bundle.sh`.
 
 > [!NOTE]
 > The app is signed but **not notarized**, so Gatekeeper won't auto‑approve a downloaded copy.
@@ -82,9 +81,10 @@ design it won't refresh the token for you (that would invalidate the CLI's own s
 - **No third parties.** Tokens are sent only to each provider's own endpoint to fetch usage —
   `api.anthropic.com`, `chatgpt.com`, `cloudcode-pa.googleapis.com`, `openrouter.ai`. There is no
   analytics, telemetry, or backend of LimitBar's own.
-- **Revoke anytime.** In **Settings → Keychain access** you can turn off Keychain reading entirely
-  (LimitBar then never touches it), or open Keychain Access to remove the app from the
-  `Claude Code-credentials` item's access list.
+- **Revoke anytime.** In **Settings → Keychain access**, turn off Keychain reading entirely —
+  LimitBar then never touches it. (This in-app switch is the real off button: LimitBar reads the
+  Claude item through Apple's `security` tool, so removing LimitBar from the item's ACL in Keychain
+  Access alone won't stop it.)
 - All file access is under your home directory, resolved at runtime — no hard‑coded paths.
 
 ## Development
